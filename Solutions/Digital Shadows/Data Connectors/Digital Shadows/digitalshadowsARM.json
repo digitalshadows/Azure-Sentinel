@@ -172,7 +172,7 @@
                         "DigitalShadowsKey": "[parameters('DigitalShadowsKey')]",
                         "DigitalShadowsSecret": "[parameters('DigitalShadowsSecret')]",
                         "DigitalShadowsUrl": "[parameters('DigitalShadowsUrl')]",
-                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/Azure/Azure-Sentinel/raw/master/DataConnectors/Digital%20shadows/digitalshadowsConnector.zip"
+                        "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/digitalshadows/Azure-Sentinel/raw/DigitalShadows-connector-v1/Solutions/Digital%20Shadows/Data%20Connectors/Digital%20Shadows/digitalshadowsConnector.zip"
                     }
                 }
             ]
