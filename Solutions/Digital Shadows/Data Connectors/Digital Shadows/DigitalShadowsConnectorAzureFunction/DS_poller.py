@@ -44,31 +44,34 @@ class poller:
             posts to azure after appending triage information on it
         """
         json_obj = response.json()
-        for i in range(len(json_obj)):
-            comment_data = self.DS_obj.get_triage_comments(item[i]['id'])
-            json_obj[i]['status'] = item[i]['state']
-            json_obj[i]['triage_id'] = item[i]['id']
-            json_obj[i]['triage_raised_time'] = item[i]['raised']
-            json_obj[i]['triage_updated_time'] = item[i]['updated']
-            
-            comment_data_filtered = []
-            for comment in comment_data:
-                comment['user-name'] = comment['user']['name']
-                del comment['triage-item-id']
-                del comment['updated']
-                del comment['user']
-                if comment['content'] != "":
-                    comment_data_filtered.append(comment)
+        for it in item:
+            for i in range(len(json_obj)):
+                if(it['source']['alert-id'] == json_obj[i]['id'] or it['source']['incident-id'] == json_obj[i]['id']):
+
+                    comment_data = self.DS_obj.get_triage_comments(it['id'])
+                    json_obj[i]['status'] = it['state']
+                    json_obj[i]['triage_id'] = it['id']
+                    json_obj[i]['triage_raised_time'] = it['raised']
+                    json_obj[i]['triage_updated_time'] = it['updated']
+                    
+                    comment_data_filtered = []
+                    for comment in comment_data:
+                        comment['user-name'] = comment['user']['name']
+                        del comment['triage-item-id']
+                        del comment['updated']
+                        del comment['user']
+                        if comment['content'] != "":
+                            comment_data_filtered.append(comment)
 
 
-            json_obj[i]['comments'] = comment_data_filtered
-            
-            json_obj[i]['description'] = self.parse_desc(json_obj[i]['description'])
+                    json_obj[i]['comments'] = comment_data_filtered
+                    
+                    json_obj[i]['description'] = self.parse_desc(json_obj[i]['description'])
 
-            if('id' in json_obj[i] and not isinstance(json_obj[i]['id'], str)):
-                json_obj[i]['description'] = json_obj[i]['description'] + "\n\nSearchlight Portal Link: https://portal-digitalshadows.com/triage/alert-incidents/" + str(json_obj[i]['id'])
-        
-            self.AS_obj.post_data(json.dumps(json_obj[i]), constant.LOG_NAME)
+                    if('id' in json_obj[i] and not isinstance(json_obj[i]['id'], str)):
+                        json_obj[i]['description'] = json_obj[i]['description'] + "\n\nSearchlight Portal Link: https://portal-digitalshadows.com/triage/alert-incidents/" + str(json_obj[i]['id'])
+                
+                    self.AS_obj.post_data(json.dumps(json_obj[i]), constant.LOG_NAME)
 
     def get_data(self):
         """
@@ -113,7 +116,7 @@ class poller:
             makes api calls in following fashion:
             triage-events --> triage-items --> incidents and alerts 
         """
-                    
+        item_data = []            
         try:
             #sending data to sentinel
             inc_ids = []
@@ -146,4 +149,7 @@ class poller:
                 #saving event num for next invocation
                 self.date.post_event(max_event_num)
         except Exception:
-            logger.exception("Error polling: ")
+            if(item_data):
+                logger.exception("Error polling: ")
+            else:
+                logger.info("No new events found.")
