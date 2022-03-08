@@ -28,7 +28,7 @@
             "type": "securestring",
             "defaultValue": ""
         },
-        "DigitalShadowsUrl": {
+        "DigitalShadowsURL": {
             "type": "string",
             "defaultValue": ""
         },
@@ -171,7 +171,7 @@
                         "HistoricalDays": "[parameters('HistoricalDays')]",
                         "DigitalShadowsKey": "[parameters('DigitalShadowsKey')]",
                         "DigitalShadowsSecret": "[parameters('DigitalShadowsSecret')]",
-                        "DigitalShadowsUrl": "[parameters('DigitalShadowsUrl')]",
+                        "DigitalShadowsURL": "[parameters('DigitalShadowsURL')]",
                         "WEBSITE_RUN_FROM_PACKAGE": "https://github.com/digitalshadows/Azure-Sentinel/raw/DigitalShadows-connector-v1/Solutions/Digital%20Shadows/Data%20Connectors/Digital%20Shadows/digitalshadowsConnector.zip"
                     }
                 }
