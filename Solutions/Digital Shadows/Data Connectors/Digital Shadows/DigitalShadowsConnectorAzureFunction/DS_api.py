@@ -65,6 +65,7 @@ class api:
 
         items_url = self.url + "triage-items"
         params = dict(id=triage_ids)
+        params['limit'] = 1000
         response = self.session.get(items_url, params=params)
         response.raise_for_status()
         return response.json()

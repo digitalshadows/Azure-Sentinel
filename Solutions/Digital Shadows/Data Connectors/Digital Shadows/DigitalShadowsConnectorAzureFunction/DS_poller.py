@@ -47,17 +47,16 @@ class poller:
         data = {}
         for item in triage_items:
             # Getting all the present triage items into the data dict
-            if 'alert-id' in item['source']:
+            if 'alert-id' in item['source'] and item['source']['alert-id'] is not None:
                 data[item['source']['alert-id']] = [item, None]
-            elif 'incident-id' in item['source']:
+            elif 'incident-id' in item['source'] and item['source']['incident-id'] is not None:
                 data[item['source']['incident-id']] = [item, None]
             else:
                 raise Exception(f'Triage item missing expected source ID field: {item}')
 
         for item in alerts_and_incidents:
-            # Replacing None in the tuple with the incident/alert corresponding to respective triage item. 
+            # Replacing None in the list with the incident/alert corresponding to respective triage item. 
             if item['id'] in data:
-                #changing tuple to list and then back to tuple so that we can map the alert/incident to triage
                 data[item['id']][1] = item
             else:
                 raise Exception(f'No matching triage item found for alert/incident: {item}')
@@ -102,6 +101,8 @@ class poller:
         """
         triage_id = []
         max_event_num = -1
+        item_data = []
+        event_data = []
 
         try:
             if(isinstance(self.event, int)):
@@ -126,7 +127,8 @@ class poller:
         except Exception:            
             logger.exception("Error while getting triage data: ")
         
-        item_data = self.DS_obj.get_triage_items(triage_id)
+        if event_data:
+            item_data = self.DS_obj.get_triage_items(triage_id)
         
         return item_data, max_event_num
 
@@ -135,8 +137,7 @@ class poller:
             main polling function, 
             makes api calls in following fashion:
             triage-events --> triage-items --> incidents and alerts 
-        """
-        item_data = []            
+        """            
         try:
             #sending data to sentinel
             inc_ids = []
@@ -163,9 +164,10 @@ class poller:
                     self.post_azure(response_alert, alert_triage_items)
             else:
                 logger.info("No new events found.")
+                max_event_num = self.event
 
-                #saving event num for next invocation
-                self.date.post_event(max_event_num)
+            #saving event num for next invocation
+            self.date.post_event(max_event_num)
         except Exception:
             logger.exception("Error polling: ")
             
