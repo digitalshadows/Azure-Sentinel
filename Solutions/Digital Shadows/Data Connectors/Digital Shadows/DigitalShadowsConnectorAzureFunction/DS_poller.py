@@ -20,7 +20,7 @@ class poller:
         self.date = State(connection_string)
         logger.info("got inside the poller code")
         self.event = self.date.get_last_event(historical_days)
-        if(isinstance(self.event, tuple)):
+        if isinstance(self.event, tuple):
             self.after_time = self.event[0]
             self.before_time = self.event[1]
             logger.info("From time: %s", self.after_time)
