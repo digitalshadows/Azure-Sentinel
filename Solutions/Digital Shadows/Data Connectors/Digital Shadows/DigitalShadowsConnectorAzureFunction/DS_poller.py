@@ -105,7 +105,7 @@ class poller:
         event_data = []
 
         try:
-            if(isinstance(self.event, int)):
+            if isinstance(self.event, int):
                 event_data = self.DS_obj.get_triage_events_by_num(self.event)
                 #calculating the max event number from current batch to  use in next call
                 if event_data:
@@ -120,14 +120,14 @@ class poller:
                     logger.info("Total number of events are " + str(len(event_data)))
             
             for event in event_data:
-                if(event is not None and event['triage-item-id'] not in triage_id):
+                if event is not None and event['triage-item-id'] not in triage_id:
                     triage_id.append(event['triage-item-id'])
 
             logger.info(triage_id)
         except Exception:            
             logger.exception("Error while getting triage data: ")
         
-        if event_data:
+        if triage_id:
             item_data = self.DS_obj.get_triage_items(triage_id)
         
         return item_data, max_event_num

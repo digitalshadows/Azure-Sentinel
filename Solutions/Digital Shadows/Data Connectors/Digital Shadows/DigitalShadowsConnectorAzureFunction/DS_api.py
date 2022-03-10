@@ -52,9 +52,9 @@ class api:
             function for getting triage events,
             send only the DS converted dates using state serializer functions to get triage events
         """
-
-        triage_url = self.url + "triage-item-events?limit=20&event-created-before=" + str(before_date) + "&event-created-after=" +  str(after_date)
-        response = self.session.get(triage_url)
+        params = {"limit": 20, "event-created-before": str(before_date), "event-created-after": str(after_date)}
+        triage_url = self.url + "triage-item-events"
+        response = self.session.get(triage_url, params=params)
         response.raise_for_status()
         return response.json()
 
@@ -84,7 +84,8 @@ class api:
         """
             gets triage events by number
         """
-        triage_url = self.url + "triage-item-events?limit=20&event-num-after=" + str(event)
-        response = self.session.get(triage_url)
+        params = {"limit": 20, "event-num-after": str(event)}
+        triage_url = self.url + "triage-item-events" 
+        response = self.session.get(triage_url, params=params)
         response.raise_for_status()
         return response.json()
