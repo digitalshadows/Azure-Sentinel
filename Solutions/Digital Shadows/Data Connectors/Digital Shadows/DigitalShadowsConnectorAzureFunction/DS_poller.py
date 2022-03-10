@@ -104,28 +104,25 @@ class poller:
         item_data = []
         event_data = []
 
-        try:
-            if isinstance(self.event, int):
-                event_data = self.DS_obj.get_triage_events_by_num(self.event)
-                #calculating the max event number from current batch to  use in next call
-                if event_data:
-                    max_event_num = max([e['event-num'] for e in event_data])
+        if isinstance(self.event, int):
+            event_data = self.DS_obj.get_triage_events_by_num(self.event)
+            #calculating the max event number from current batch to  use in next call
+            if event_data:
+                max_event_num = max([e['event-num'] for e in event_data])
 
-            else:
-                event_data = self.DS_obj.get_triage_events(self.before_time, self.after_time)
-                #calculating the max event number from current batch to  use in next call
-                if event_data:
-                    max_event_num = max([e['event-num'] for e in event_data])
-                    logger.info("First poll from event number " + str(event_data[0]['event-num']))
-                    logger.info("Total number of events are " + str(len(event_data)))
+        else:
+            event_data = self.DS_obj.get_triage_events(self.before_time, self.after_time)
+            #calculating the max event number from current batch to  use in next call
+            if event_data:
+                max_event_num = max([e['event-num'] for e in event_data])
+                logger.info("First poll from event number " + str(event_data[0]['event-num']))
+                logger.info("Total number of events are " + str(len(event_data)))
             
-            for event in event_data:
-                if event is not None and event['triage-item-id'] not in triage_id:
-                    triage_id.append(event['triage-item-id'])
+        for event in event_data:
+            if event is not None and event['triage-item-id'] not in triage_id:
+                triage_id.append(event['triage-item-id'])
 
-            logger.info(triage_id)
-        except Exception:            
-            logger.exception("Error while getting triage data: ")
+        logger.info(triage_id)
         
         if triage_id:
             item_data = self.DS_obj.get_triage_items(triage_id)
