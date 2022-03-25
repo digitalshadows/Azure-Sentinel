@@ -47,13 +47,22 @@ class api:
         response.raise_for_status()
         return response.json()
 
-    def get_triage_events(self, before_date, after_date):
+    def get_triage_events(self, before_date, after_date, app_num, inc_list, exc_list):
         """ 
             function for getting triage events,
             send only the DS converted dates using state serializer functions to get triage events
         """
-        params = {"limit": 20, "event-created-before": str(before_date), "event-created-after": str(after_date)}
-        triage_url = self.url + "triage-item-events"
+        if app_num == "app1":
+            params = {
+                "classification": inc_list,
+
+            }
+        elif app_num == "app2":
+            params = {
+                "classification-exclusion": exc_list,
+
+            }
+        triage_url = self.url + "triage-item-events?limit=20&event-created-before=" + str(before_date) + "&event-created-after=" +  str(after_date)
         response = self.session.get(triage_url, params=params)
         response.raise_for_status()
         return response.json()
@@ -65,7 +74,6 @@ class api:
 
         items_url = self.url + "triage-items"
         params = dict(id=triage_ids)
-        params['limit'] = 1000
         response = self.session.get(items_url, params=params)
         response.raise_for_status()
         return response.json()
@@ -80,12 +88,22 @@ class api:
         response.raise_for_status()
         return response.json()
     
-    def get_triage_events_by_num(self, event):
+    def get_triage_events_by_num(self, event, app_num, inc_list, exc_list):
         """
             gets triage events by number
         """
-        params = {"limit": 20, "event-num-after": str(event)}
-        triage_url = self.url + "triage-item-events" 
+        triage_url = self.url + "triage-item-events?limit=20&event-num-after=" + str(event)
+        
+        if app_num == "app1":
+            params = {
+                "classification": inc_list,
+
+            }
+        elif app_num == "app2":
+            params = {
+                "classification-exclusion": exc_list,
+
+            }
+        
         response = self.session.get(triage_url, params=params)
-        response.raise_for_status()
         return response.json()
