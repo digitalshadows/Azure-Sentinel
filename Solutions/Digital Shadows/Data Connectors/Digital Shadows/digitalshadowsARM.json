@@ -140,6 +140,7 @@
                         "[concat('Microsoft.Web/sites/', variables('FunctionName1'))]"
                     ],
                     "properties": {
+                        "FUNCTION_NAME": "[variables('FunctionName1')]",
                         "FUNCTIONS_EXTENSION_VERSION": "~3",
                         "FUNCTIONS_WORKER_RUNTIME": "python",
                         "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('Microsoft.insights/components', variables('FunctionName1')), '2015-05-01').InstrumentationKey]",
@@ -215,6 +216,7 @@
                     "[concat('Microsoft.Web/sites/', variables('FunctionName2'))]"
                     ],
                     "properties": {
+                        "FUNCTION_NAME": "[variables('FunctionName2')]",
                         "FUNCTIONS_EXTENSION_VERSION": "~3",
                         "FUNCTIONS_WORKER_RUNTIME": "python",
                         "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('Microsoft.insights/components', variables('FunctionName2')), '2015-05-01').InstrumentationKey]",
