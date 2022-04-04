@@ -225,6 +225,7 @@
                         "logAnalyticsUri": "[variables('LogAnaltyicsUri')]",
                         "HighVariabilityClassifications": "[parameters('HighVariabilityClassifications')]",
                         "ClassificationFilterOperation": "exclude",
+                        "WorkspaceID": "[parameters('WorkspaceID')]",
                         "WorkspaceKey": "[parameters('WorkspaceKey')]",
                         "DigitalShadowsAccountID": "[parameters('DigitalShadowsAccountID')]",
                         "HistoricalDays": "[parameters('HistoricalDays')]",
