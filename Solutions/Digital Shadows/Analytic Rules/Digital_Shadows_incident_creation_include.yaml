@@ -1,4 +1,4 @@
-﻿
+
 id: f7abe9c1-1e6c-4317-b907-25769e7764c5
 name: Digital Shadows incident creation rule app 1
 kind: Scheduled
@@ -8,7 +8,7 @@ properties:
   severity: Medium
   enabled: true
   query: "let DSSearchLight_view  = view () { \n    DigitalShadows_CL\n    | where
-    app_s == \"app2\"\n    | extend \n                EventVendor=\"Digital Shadows\",\n
+    app_s == \"include\"\n    | extend \n                EventVendor=\"Digital Shadows\",\n
     \               EventProduct=\"SearchLight\",\n                Type=\"DigitalShadows_CL\",\n
     \               EventStartTime=raised_t,\n                EventMessage=title_s,\n
     \               EventOriginalUid=triage_id_g,\n                EventOriginalType=classification_s\n
