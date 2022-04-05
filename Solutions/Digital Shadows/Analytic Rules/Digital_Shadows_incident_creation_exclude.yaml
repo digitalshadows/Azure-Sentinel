@@ -1,9 +1,9 @@
 ﻿
 id: f7abe9c1-1e6c-4317-b907-25769e7764c5
-name: Digital Shadows incident creation rule app 1
+name: Digital Shadows Incident Creation for exclude-app
 kind: Scheduled
 properties:
-  displayName: Digital Shadows Incident rule - App 1
+  displayName: Digital Shadows Incident Creation for exclude-app
   description: ''
   severity: Medium
   enabled: true
