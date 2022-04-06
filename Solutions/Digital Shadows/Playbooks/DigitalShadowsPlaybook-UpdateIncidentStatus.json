@@ -2,26 +2,28 @@
     "$schema":  "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion":  "1.0.0.0",
     "metadata":  {
-        "title":  "",
-        "description":  "",
-        "prerequisites":  "",
-        "prerequisitesDeployTemplateFile":  "",
-        "lastUpdateTime":  "",
+        "title":  "Digital Shadows Playbook to Update Incident Status",
+        "description":  "The playbook will update the status of Azure incidents which are created from the Alerts triggered by Digital Shadows SearchLight portal",
+        "prerequisites":  "The Digital Shadows Data Connector is deplyed on your environment",
+        "prerequisitesDeployTemplateFile":  "The Digital Shadows Data Connector is deplyed on your environment",
+        "lastUpdateTime":  "2022-04-06T00:00:00.000Z",
         "entities":  [
+            "Account", "IPs", "URL", "Host"
         ],
         "tags":  [
+            "Threat Intelligence,"
         ],
         "support":  {
             "tier":  "community",
             "armtemplate":  "Generated from https://github.com/Azure/Azure-Sentinel/tree/master/Tools/Playbook-ARM-Template-Generator"
         },
         "author":  {
-            "name":  ""
+            "name":  "Kapil Bisen"
         }
     },
     "parameters":  {
         "PlaybookName":  {
-            "defaultValue":  "Digital Shadows Playbook to Update Incident Severity",
+            "defaultValue":  "DigitalShadowsPlaybook-UpdateIncidentStatus",
             "type":  "string"
         }
     },
@@ -375,7 +377,7 @@
             "type":  "Microsoft.Logic/workflows",
             "location":  "[resourceGroup().location]",
             "tags":  {
-                "hidden-SentinelTemplateName":  "DigitalShadowsPlaybookToUpdateSeverity",
+                "hidden-SentinelTemplateName":  "DigitalShadowsPlaybook-UpdateIncidentStatus",
                 "hidden-SentinelTemplateVersion":  "1.0"
             },
             "identity":  {
