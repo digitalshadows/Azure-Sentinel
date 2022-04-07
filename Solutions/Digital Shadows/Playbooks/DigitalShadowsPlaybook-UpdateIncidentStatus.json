@@ -3,7 +3,7 @@
     "contentVersion":  "1.0.0.0",
     "metadata":  {
         "title":  "Digital Shadows Playbook to Update Incident Status",
-        "description":  "The playbook will update the status of Azure incidents which are created from the Alerts triggered by Digital Shadows SearchLight portal",
+        "description":  "This playbook will update the status of Microsoft Sentinel incidents to match the status of the alerts imported from Digital Shadows SearchLight",
         "prerequisites":  [
             "The Digital Shadows Data Connector is deployed on your environment"
         ],
