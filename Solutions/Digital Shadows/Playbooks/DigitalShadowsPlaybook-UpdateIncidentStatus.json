@@ -11,7 +11,7 @@
             "Account", "IPs", "URL", "Host"
         ],
         "tags":  [
-            "Threat Intelligence,"
+            "Sync"
         ],
         "support":  {
             "tier":  "community",
