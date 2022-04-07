@@ -4,14 +4,16 @@
     "metadata":  {
         "title":  "Digital Shadows Playbook to Update Incident Status",
         "description":  "This playbook will update the status of Microsoft Sentinel incidents to match the status of the alerts imported from Digital Shadows SearchLight",
+        "mainSteps": [
+            "1. This playbook triggers when a Microsoft Sentinel Alert is created by the Digital Shadows Data Connector",
+            "2. The status of the inbound Digital Shadows alert is inspected and the Microsoft Sentinel Incident status is updated to match"
+        ],
         "prerequisites":  [
             "The Digital Shadows Data Connector is deployed on your environment"
         ],
-        "prerequisitesDeployTemplateFile":  "The Digital Shadows Data Connector is deplyed on your environment",
+        "prerequisitesDeployTemplateFile":  "",
         "lastUpdateTime":  "2022-04-06T00:00:00.000Z",
-        "entities":  [
-            "Account", "IPs", "URL", "Host"
-        ],
+        "entities":  [],
         "tags":  [
             "Sync"
         ],
@@ -35,7 +37,6 @@
     "resources":  [
         {
             "properties":  {
-                "provisioningState":  "Succeeded",
                 "state":  "Enabled",
                 "definition":  {
                     "$schema":  "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
