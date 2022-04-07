@@ -4,7 +4,9 @@
     "metadata":  {
         "title":  "Digital Shadows Playbook to Update Incident Status",
         "description":  "The playbook will update the status of Azure incidents which are created from the Alerts triggered by Digital Shadows SearchLight portal",
-        "prerequisites":  "The Digital Shadows Data Connector is deplyed on your environment",
+        "prerequisites":  [
+            "The Digital Shadows Data Connector is deployed on your environment"
+        ],
         "prerequisitesDeployTemplateFile":  "The Digital Shadows Data Connector is deplyed on your environment",
         "lastUpdateTime":  "2022-04-06T00:00:00.000Z",
         "entities":  [
