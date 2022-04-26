@@ -1,0 +1,499 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "metadata": {
+        "title": "Digital Shadows Comment Formatter",
+        "description": "Inspects comments from SearchLight on Azure Sentinel Incidents and transfers them into incident comments where they do not already exist",
+        "mainSteps": [
+            "1. This playbook triggers when a Microsoft Sentinel Alert is created by the Digital Shadows Data Connector",
+            "2. The comments on the Alert are inspected and any that are not present on the parent Incident are transferred into the Incident Comments"
+        ],
+        "prerequisites": [
+            "The Digital Shadows Data Connector is deployed on your environment"
+        ],
+        "lastUpdateTime": "2022-04-26T00:00:00.000Z",
+        "entities": [],
+        "tags": [
+            "Sync"
+        ],
+        "support": {
+            "tier": "community"
+        },
+        "author": {
+            "name": "Digital Shadows"
+        }
+    },
+    "parameters": {
+        "PlaybookName": {
+            "defaultValue": "DigitalShadowsPlaybook-UpdateIncidentComments",
+            "type": "string"
+        }
+    },
+    "variables": {
+        "azuresentinelConnectionName": "[concat('azuresentinel-', parameters('PlaybookName'))]"
+    },
+    "resources": [
+        {
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "Microsoft_Sentinel_alert": {
+                            "type": "ApiConnectionWebhook",
+                            "inputs": {
+                                "body": {
+                                    "callback_url": "@{listCallbackUrl()}"
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                                    }
+                                },
+                                "path": "/subscribe"
+                            }
+                        }
+                    },
+                    "actions": {
+                        "Alert_-_Get_incident": {
+                            "runAfter": {
+                                "Delay": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/Incidents/subscriptions/@{encodeURIComponent(triggerBody()?['WorkspaceSubscriptionId'])}/resourceGroups/@{encodeURIComponent(triggerBody()?['WorkspaceResourceGroup'])}/workspaces/@{encodeURIComponent(triggerBody()?['WorkspaceId'])}/alerts/@{encodeURIComponent(triggerBody()?['SystemAlertId'])}"
+                            }
+                        },
+                        "Delay": {
+                            "runAfter": {},
+                            "type": "Wait",
+                            "inputs": {
+                                "interval": {
+                                    "count": 1,
+                                    "unit": "Second"
+                                }
+                            }
+                        },
+                        "For_each_inbound_comment": {
+                            "foreach": "@variables('Comments to process')",
+                            "actions": {
+                                "Comment_already_exists": {
+                                    "actions": {},
+                                    "runAfter": {
+                                        "Determine_if_comment_exists": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "else": {
+                                        "actions": {
+                                            "Add_comment_to_incident_(V3)": {
+                                                "runAfter": {},
+                                                "type": "ApiConnection",
+                                                "inputs": {
+                                                    "body": {
+                                                        "incidentArmId": "@body('Alert_-_Get_incident')?['id']",
+                                                        "message": "<p>SearchLight user: @{body('Parse_Single_Comment')?['user_name']}<br>\nSearchLight comment ID: @{body('Parse_Single_Comment')?['id']}<br>\nCreated in SearchLight: @{body('Parse_Single_Comment')?['created']}<br>\n@{body('Parse_Single_Comment')?['content']}</p>"
+                                                    },
+                                                    "host": {
+                                                        "connection": {
+                                                            "name": "@parameters('$connections')['azuresentinel']['connectionId']"
+                                                        }
+                                                    },
+                                                    "method": "post",
+                                                    "path": "/Incidents/Comment"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "expression": {
+                                        "and": [
+                                            {
+                                                "equals": [
+                                                    "@variables('comment_exists')",
+                                                    "@true"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    "type": "If"
+                                },
+                                "Determine_if_comment_exists": {
+                                    "foreach": "@variables('Existing Comments')",
+                                    "actions": {
+                                        "Comment_ID_found_in_existing": {
+                                            "actions": {
+                                                "Set_'comment_exists'_to_true": {
+                                                    "runAfter": {},
+                                                    "type": "SetVariable",
+                                                    "inputs": {
+                                                        "name": "comment_exists",
+                                                        "value": "@true"
+                                                    }
+                                                }
+                                            },
+                                            "runAfter": {},
+                                            "expression": {
+                                                "and": [
+                                                    {
+                                                        "contains": [
+                                                            "",
+                                                            "@body('Parse_Single_Comment')?['id']"
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "type": "If"
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Parse_Single_Comment": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Foreach",
+                                    "runtimeConfiguration": {
+                                        "concurrency": {
+                                            "repetitions": 1
+                                        }
+                                    }
+                                },
+                                "Parse_Single_Comment": {
+                                    "runAfter": {
+                                        "Reset_'comment_exists'_to_false": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@items('For_each_inbound_comment')",
+                                        "schema": {
+                                            "properties": {
+                                                "content": {
+                                                    "type": "string"
+                                                },
+                                                "created": {
+                                                    "type": "string"
+                                                },
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "user_name": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "Reset_'comment_exists'_to_false": {
+                                    "runAfter": {},
+                                    "type": "SetVariable",
+                                    "inputs": {
+                                        "name": "comment_exists",
+                                        "value": "@false"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_'comment_exists'_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach",
+                            "runtimeConfiguration": {
+                                "concurrency": {
+                                    "repetitions": 1
+                                }
+                            }
+                        },
+                        "Gather_existing_comments": {
+                            "foreach": "@body('Alert_-_Get_incident')?['properties']?['Comments']",
+                            "actions": {
+                                "Append_to_array_variable": {
+                                    "runAfter": {
+                                        "Compose": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "AppendToArrayVariable",
+                                    "inputs": {
+                                        "name": "Existing Comments",
+                                        "value": "@outputs('Compose')"
+                                    }
+                                },
+                                "Compose": {
+                                    "runAfter": {},
+                                    "type": "Compose",
+                                    "inputs": " @{items('Gather_existing_comments')['properties']['message']}"
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_\"Existing_Comments\"_array": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach"
+                        },
+                        "Gather_inbound_comments": {
+                            "actions": {
+                                "For_each_nested_comment_string": {
+                                    "foreach": "@body('Parse_Nested_Comment_Strings')",
+                                    "actions": {
+                                        "For_each_3": {
+                                            "foreach": "@body('Parse_Comment_StringJSON')",
+                                            "actions": {
+                                                "Condition": {
+                                                    "actions": {},
+                                                    "runAfter": {},
+                                                    "else": {
+                                                        "actions": {
+                                                            "Append_to_comments_to_process": {
+                                                                "runAfter": {},
+                                                                "type": "AppendToArrayVariable",
+                                                                "inputs": {
+                                                                    "name": "Comments to process",
+                                                                    "value": "@items('For_each_3')"
+                                                                }
+                                                            }
+                                                        }
+                                                    },
+                                                    "expression": {
+                                                        "and": [
+                                                            {
+                                                                "contains": [
+                                                                    "@variables('Comments to process')",
+                                                                    "@items('For_each_3')"
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": "If"
+                                                }
+                                            },
+                                            "runAfter": {
+                                                "Parse_Comment_StringJSON": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "Foreach"
+                                        },
+                                        "Parse_Comment_StringJSON": {
+                                            "runAfter": {},
+                                            "type": "ParseJson",
+                                            "inputs": {
+                                                "content": "@items('For_each_nested_comment_string')",
+                                                "schema": {
+                                                    "items": {
+                                                        "properties": {
+                                                            "content": {
+                                                                "type": "string"
+                                                            },
+                                                            "created": {
+                                                                "type": "string"
+                                                            },
+                                                            "id": {
+                                                                "type": "string"
+                                                            },
+                                                            "user_name": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "user_name",
+                                                            "content",
+                                                            "id",
+                                                            "created"
+                                                        ],
+                                                        "type": "object"
+                                                    },
+                                                    "type": "array"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "runAfter": {
+                                        "Parse_Nested_Comment_Strings": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "Foreach"
+                                },
+                                "Parse_Comments": {
+                                    "runAfter": {
+                                        "Parse_Custom_Details": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@body('Parse_Custom_Details')?['Custom Details']",
+                                        "schema": {
+                                            "properties": {
+                                                "comments": {
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": "array"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "Parse_Custom_Details": {
+                                    "runAfter": {},
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@triggerBody()?['ExtendedProperties']",
+                                        "schema": {
+                                            "properties": {
+                                                "Custom Details": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "Parse_Nested_Comment_Strings": {
+                                    "runAfter": {
+                                        "Parse_Comments": [
+                                            "Succeeded"
+                                        ]
+                                    },
+                                    "type": "ParseJson",
+                                    "inputs": {
+                                        "content": "@body('Parse_Comments')?['comments']",
+                                        "schema": {
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "type": "array"
+                                        }
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "Initialize_comments_to_process": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Scope"
+                        },
+                        "Initialize_\"Existing_Comments\"_array": {
+                            "runAfter": {
+                                "Alert_-_Get_incident": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "Existing Comments",
+                                        "type": "array"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_'comment_exists'_variable": {
+                            "runAfter": {
+                                "Gather_inbound_comments": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "comment_exists",
+                                        "type": "boolean",
+                                        "value": "@false"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_comments_to_process": {
+                            "runAfter": {
+                                "Gather_existing_comments": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "Comments to process",
+                                        "type": "array",
+                                        "value": []
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azuresentinel": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', variables('azuresentinelConnectionName'))]",
+                                "connectionName": "[variables('azuresentinelConnectionName')]",
+                                "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azuresentinel')]",
+                                "connectionProperties": {
+                                    "authentication": {
+                                        "type": "ManagedServiceIdentity"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "name": "[parameters('PlaybookName')]",
+            "type": "Microsoft.Logic/workflows",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "hidden-SentinelTemplateName": "DigitalShadowsPlaybook-UpdateIncidentComments",
+                "hidden-SentinelTemplateVersion": "1.0"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "apiVersion": "2017-07-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', variables('azuresentinelConnectionName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/connections",
+            "apiVersion": "2016-06-01",
+            "name": "[variables('azuresentinelConnectionName')]",
+            "location": "[resourceGroup().location]",
+            "kind": "V1",
+            "properties": {
+                "displayName": "[variables('azuresentinelConnectionName')]",
+                "customParameterValues": {},
+                "parameterValueType": "Alternative",
+                "api": {
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azuresentinel')]"
+                }
+            }
+        }
+    ]
+}
